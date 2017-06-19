@@ -28,8 +28,11 @@ public class GameScreen extends JPanel implements Runnable, KeyListener {
 	private long targetTime;
 	//For Game
 	private int SIZE = 10;
-	Entity head;
+	Entity head, food;
+	private int score,level;
 	ArrayList<Entity> snake;
+	private boolean gameover;
+
 	//Movement
 	private int dx, dy;
 	//Key Input
@@ -89,7 +92,6 @@ public class GameScreen extends JPanel implements Runnable, KeyListener {
 		if(k == KeyEvent.VK_LEFT)
 			left = false;
 
-
 		if(k == KeyEvent.VK_RIGHT)
 			right = false;
 
@@ -98,9 +100,7 @@ public class GameScreen extends JPanel implements Runnable, KeyListener {
 	}
 
 	@Override
-	public void keyTyped(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-
+	public void keyTyped(KeyEvent e) {
 	}
 
 	@Override
@@ -133,7 +133,6 @@ public class GameScreen extends JPanel implements Runnable, KeyListener {
 		g2d = image.createGraphics();
 		running = true;
 		setUp();
-		setFPS(10);
 	}
 
 	private void setUp(){
@@ -141,12 +140,27 @@ public class GameScreen extends JPanel implements Runnable, KeyListener {
 		head = new Entity(SIZE);
 		head.setPosition(WIDTH/2, HEIGHT/2);
 		snake.add(head);
-		for (int i = 1; i < 10; i++){
+		for (int i = 1; i < 3; i++){
 			Entity e = new Entity(SIZE);
 			e.setPosition(head.getX()+(i*SIZE), head.getY());
 			snake.add(e);
-
 		}
+		food = new Entity(SIZE);
+		setFood();
+		score = 0;
+		gameover = false;
+		level = 1;
+		setFPS(level * 10);
+		
+	}
+	
+	public void setFood(){
+		int x = (int) (Math.random() *(WIDTH - SIZE));
+		int y = (int) (Math.random() *(HEIGHT - SIZE));
+		y = y - (y % SIZE);
+		x = x - (x % SIZE);
+		food.setPosition(x, y);
+
 	}
 
 	private void requestRender() {
@@ -158,6 +172,12 @@ public class GameScreen extends JPanel implements Runnable, KeyListener {
 	}
 
 	private void update() {
+		if(gameover){
+			if(start)
+				setUp();
+			return;
+		}
+				
 		if(up && dy == 0){
 			dy = -SIZE;
 			dx = 0;
@@ -170,7 +190,7 @@ public class GameScreen extends JPanel implements Runnable, KeyListener {
 			dy = 0;
 			dx = -SIZE;
 		}
-		if(right && dx == 0){
+		if(right && dx == 0 ){
 			dy = 0;
 			dx = SIZE;
 		}
@@ -183,14 +203,34 @@ public class GameScreen extends JPanel implements Runnable, KeyListener {
 			}
 			head.move(dx, dy);
 		}
-
+		
+		for(Entity e : snake){
+			if(e.isCollision(head)){
+				gameover = true;
+				break;
+			}
+		}
+		
+		if(food.isCollision(head)){
+			score++;
+			setFood();
+			Entity e = new Entity(SIZE);
+			e.setPosition(-100,-100);
+			snake.add(e);
+			if(score % 10 == 0){
+				level++;
+				if (level > 10)
+					level = 10;
+				setFPS(level * 10);
+			}
+		}
 		if(head.getX() < 0)
-			head.setX(WIDTH);
+			head.setX(WIDTH-10);
 		if(head.getY() < 0)
-			head.setY(HEIGHT);
-		if(head.getX() > WIDTH)
+			head.setY(HEIGHT-10);
+		if(head.getX() > WIDTH-10)
 			head.setX(0);
-		if(head.getY() > HEIGHT)
+		if(head.getY() > HEIGHT-10)
 			head.setY(0);
 
 	}
@@ -202,6 +242,15 @@ public class GameScreen extends JPanel implements Runnable, KeyListener {
 		for(Entity e : snake){
 			e.render(g2d);
 		}
+		
+		g2d.setColor(Color.RED);
+		food.render(g2d);
+		if(gameover)
+			g2d.drawString("Gameover!", 150, 200);
+		g2d.setColor(Color.WHITE);
+		g2d.drawString("Score: " + score + " Level: " + level, 10, 10);
+		if(dx == 0 && dy == 0)
+			g2d.drawString("Ready", 150, 200);
 	}
 
 
