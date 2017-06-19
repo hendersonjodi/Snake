@@ -30,15 +30,20 @@ public class GameScreen extends JPanel implements Runnable, KeyListener {
 	private int SIZE = 10;
 	Entity head;
 	ArrayList<Entity> snake;
-	
+	//Movement
+	private int dx, dy;
+	//Key Input
+	private boolean up,down,left,right,start;
+
+
 	public GameScreen(){
 		setPreferredSize(new Dimension(WIDTH,HEIGHT));
 		setFocusable(true);
 		requestFocus();
 		addKeyListener(this);
-		
+
 	}
-	
+
 	@Override
 	public void addNotify(){
 		super.addNotify();
@@ -50,15 +55,46 @@ public class GameScreen extends JPanel implements Runnable, KeyListener {
 	}
 
 	@Override
-	public void keyPressed(KeyEvent arg0) {
-		// TODO Auto-generated method stub
+	public void keyPressed(KeyEvent e) {
+		int k = e.getKeyCode();
+
+		if(k == KeyEvent.VK_UP)
+			up = true;
+
+		if(k == KeyEvent.VK_DOWN)
+			down = true;
+
+		if(k == KeyEvent.VK_LEFT)
+			left = true;
+
+		if(k == KeyEvent.VK_RIGHT)
+			right = true;
+
+		if(k == KeyEvent.VK_ENTER)
+			start = true;
+
 
 	}
 
 	@Override
-	public void keyReleased(KeyEvent arg0) {
-		// TODO Auto-generated method stub
+	public void keyReleased(KeyEvent e) {
+		int k = e.getKeyCode();
 
+		if(k == KeyEvent.VK_UP)
+			up = false;
+
+		if(k == KeyEvent.VK_DOWN)
+			down = false;
+
+		if(k == KeyEvent.VK_LEFT)
+			left = false;
+
+
+		if(k == KeyEvent.VK_RIGHT)
+			right = false;
+
+		if(k == KeyEvent.VK_ENTER)
+			start = false;
 	}
 
 	@Override
@@ -77,12 +113,12 @@ public class GameScreen extends JPanel implements Runnable, KeyListener {
 		long wait;
 		while(running){
 			startTime = System.nanoTime();
-			
+
 			update();
 			requestRender();
-			
+
 			elapsed = System.nanoTime() - startTime;
-			wait = targetTime - elapsed - 1000000;
+			wait = targetTime - elapsed / 1000000;
 			if(wait >0){
 				try{
 					Thread.sleep(wait);
@@ -99,7 +135,7 @@ public class GameScreen extends JPanel implements Runnable, KeyListener {
 		setUp();
 		setFPS(10);
 	}
-	
+
 	private void setUp(){
 		snake = new ArrayList<Entity>();
 		head = new Entity(SIZE);
@@ -109,36 +145,69 @@ public class GameScreen extends JPanel implements Runnable, KeyListener {
 			Entity e = new Entity(SIZE);
 			e.setPosition(head.getX()+(i*SIZE), head.getY());
 			snake.add(e);
-			
+
 		}
 	}
-	
+
 	private void requestRender() {
 		render(g2d);
 		Graphics g = getGraphics();
 		g.drawImage(image, 0, 0,null);
 		g.dispose();
-		
+
 	}
 
 	private void update() {
-		// TODO Auto-generated method stub
-		
+		if(up && dy == 0){
+			dy = -SIZE;
+			dx = 0;
+		}
+		if(down && dy == 0){
+			dy = SIZE;
+			dx = 0;
+		}
+		if(left && dx == 0){
+			dy = 0;
+			dx = -SIZE;
+		}
+		if(right && dx == 0){
+			dy = 0;
+			dx = SIZE;
+		}
+		if(dx != 0 || dy != 0){
+			for(int i = snake.size() - 1; i>0 ; i--){
+				snake.get(i).setPosition(
+						snake.get(i-1).getX(), 
+						snake.get(i-1).getY()
+						);
+			}
+			head.move(dx, dy);
+		}
+
+		if(head.getX() < 0)
+			head.setX(WIDTH);
+		if(head.getY() < 0)
+			head.setY(HEIGHT);
+		if(head.getX() > WIDTH)
+			head.setX(0);
+		if(head.getY() > HEIGHT)
+			head.setY(0);
+
 	}
 	public void render(Graphics2D g2d){
 		g2d.clearRect(0, 0, WIDTH, HEIGHT);
 		g2d.setColor(Color.GREEN);
-		
+
 		// for each e in snake
 		for(Entity e : snake){
 			e.render(g2d);
 		}
 	}
-	
 
 
-	
-	
-	
-	
+
+
+
+
+
 }

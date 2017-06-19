@@ -45,6 +45,6 @@ public class Entity {
 	}
 	
 	public void render(Graphics2D g2d){
-		g2d.fillRect(x, y, size, size);
+		g2d.fillRect(x+1, y+1, size-2, size-2);
 	}
 }
